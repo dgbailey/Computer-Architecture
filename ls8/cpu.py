@@ -7,7 +7,13 @@ class CPU:
 
     def __init__(self):
         """Construct a new CPU."""
-        pass
+        self.ram = [0] * 256
+        self.reg = [0] * 8
+        self.pc = 0
+        self.HLT = 0b00000001
+        self.LDI = 0b10000010
+        self.PRN = 0b01000111
+        self.running = True
 
     def load(self):
         """Load a program into memory."""
@@ -29,6 +35,7 @@ class CPU:
         for instruction in program:
             self.ram[address] = instruction
             address += 1
+
 
 
     def alu(self, op, reg_a, reg_b):
@@ -53,6 +60,7 @@ class CPU:
             self.ram_read(self.pc),
             self.ram_read(self.pc + 1),
             self.ram_read(self.pc + 2)
+            
         ), end='')
 
         for i in range(8):
@@ -61,5 +69,69 @@ class CPU:
         print()
 
     def run(self):
+        
+        while self.running:
+            #read program counter(PC) address into instruction register(IR)
+            ir = self.ram_read(self.pc)
+            print("Instruction",ir)
+
+            
+          
+            try:
+            #read next two instructions in case they are needed
+                operand_a = self.ram_read(self.pc + 1)
+                operand_b = self.ram_read(self.pc + 2)
+
+            except IndexError:
+                print("register operand out of range")
+            
+
+           
+
+            if ir == self.LDI:
+                print("LDI")
+                reg_address = operand_a
+                data = operand_b
+                self.reg_write(data,reg_address)
+
+
+            elif ir == self.PRN:
+                print("PRINT")
+                data = self.reg_read(operand_a)
+                print(data)
+                
+
+            elif ir == self.HLT:
+                print("HLT")
+                
+                self.running = False
+            
+            #go to next instruction based of of two high bits of current instruction in IR
+            next_instruction = self.pc + ir >>6
+            if next_instruction >= 1:
+
+                self.pc += next_instruction + 1
+            
+            else:
+                self.pc += 1
+            
+            # print(f"program counter is {self.pc}"
+
+            
+
+
         """Run the CPU."""
-        pass
+        
+
+    def ram_read(self,mar):
+        return self.ram[mar]
+
+    def ram_write(self,mdr,mar):
+        self.ram[mar] = mdr
+
+
+    def reg_read(self,ra):
+        return self.reg[ra]
+
+    def reg_write(self,rd,ra):
+        self.reg[ra] = rd
