@@ -16,6 +16,11 @@ class CPU:
         self.PRN = 0b01000111
         self.MUL = 0b10100010
         self.running = True
+        self.CALL = 0b01010000
+        self.RET = 0b00010001
+        self.sp = 255
+        self.PUSH = 0b01000101
+        self.POP = 0b01000110
 
     def load(self,filename):
         """Load a program into self.ram."""
@@ -115,12 +120,34 @@ class CPU:
                 register_b = self.reg_read(instruction_b)
                 self.reg_write(register_a*register_b,instruction_a)
                 print("MUL")
-                
+
+            #  elif ir == self.CALL:
+            #     #reads function at register address a
+            #     register_a = self.reg_read(instruction_b)
+            #     self.pc = 256
+               
+            elif ir == self.PUSH:
+                register_a = self.reg_read(instruction_a)
+                #decrement stack poiner
+                self.sp -=1
+                #assign reg a to stack address
+                self.ram[self.sp] = register_a
+
+            elif ir == self.POP:
+               
+                #copy instruction at current stack pointer
+                temp_instruction = self.ram[self.sp]
+                #write instruction to given reg address
+                self.reg_write(temp_instruction,instruction_a)
+                #increment stack pointer
+                self.sp +=1
+
+            
 
             elif ir == self.HLT:
-                print("HLT")
+                return
+                # register_a = self.reg_read(instruction_b)
                 
-                self.running = False
             
             #go to next instruction based of of two high bits of current instruction in IR
             #you many need custom jump numbers based on OP CODE
