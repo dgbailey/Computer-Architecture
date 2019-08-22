@@ -18,9 +18,12 @@ class CPU:
         self.running = True
         self.CALL = 0b01010000
         self.RET = 0b00010001
-        self.sp = 255
+        self.sp = 256
         self.PUSH = 0b01000101
         self.POP = 0b01000110
+        self.MULT2PRINT = 0b00011000
+        self.DIDJUMP = False
+        self.ADD = 0b10100000
 
     def load(self,filename):
         """Load a program into self.ram."""
@@ -86,8 +89,11 @@ class CPU:
     def run(self):
         
         while self.running:
+            #the current solution for jumping around PC addresses while maintining some dynamic adjustment of the PC otherwise
+            self.DIDJUMP = False
             #read program counter(PC) address into instruction register(IR)
             ir = self.ram_read(self.pc)
+            
             print("Instruction",ir)
 
             
@@ -121,17 +127,45 @@ class CPU:
                 self.reg_write(register_a*register_b,instruction_a)
                 print("MUL")
 
-            #  elif ir == self.CALL:
-            #     #reads function at register address a
-            #     register_a = self.reg_read(instruction_b)
-            #     self.pc = 256
+            elif ir == self.CALL:
+                #decrement stack pointer and push next PC to stack
+                self.sp -=1
+                self.ram[self.sp] = self.pc + 2
+
+                #read reg 0 to get sub routing PC, set PC to new subroutine position
+                sub_routine_pointer = self.reg_read(instruction_a)
+                self.pc = sub_routine_pointer
+                #necessary to break out of normal dynamic calculation of next pointer position
+                self.DIDJUMP = True
+
+            elif ir == self.ADD:
+            
+                reg1 = self.reg_read(instruction_a)
+             
+                reg2 = self.reg_read(instruction_b)
+             
+                addition = reg1 + reg2
+          
+                self.reg_write(addition,instruction_a)
+
+
+            elif ir == self.RET:
+                #pop last PC address from stack , set PC to that adress
+                new_program_counter = self.ram[self.sp]
+                #increment stack pointer
+                self.sp += 1
+               
+                self.pc = new_program_counter
+                self.DIDJUMP = True
+
+
                
             elif ir == self.PUSH:
                 register_a = self.reg_read(instruction_a)
                 #decrement stack poiner
                 self.sp -=1
-                #assign reg a to stack address
-                self.ram[self.sp] = register_a
+                #address of instruction directly after call placed on stack
+                self.ram[self.sp] = instruction_b
 
             elif ir == self.POP:
                
@@ -146,18 +180,22 @@ class CPU:
 
             elif ir == self.HLT:
                 return
-                # register_a = self.reg_read(instruction_b)
+                
                 
             
             #go to next instruction based of of two high bits of current instruction in IR
             #you many need custom jump numbers based on OP CODE
-            next_instruction = self.pc + ir >>6
-            if next_instruction >= 1:
+            if self.DIDJUMP:
+                pass
 
-                self.pc += next_instruction + 1
-            
             else:
-                self.pc += 1
+                next_instruction =  ir >>6
+                if next_instruction >= 1:
+
+                    self.pc += next_instruction + 1
+                
+                else:
+                    self.pc += 1
             
             # print(f"program counter is {self.pc}"
 
