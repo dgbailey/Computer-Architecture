@@ -29,6 +29,10 @@ class CPU:
         self.JMP = 0b01010100
         self.JNE = 0b01010110
         self.JEQ = 0b01010101
+        self.ST = 0b10000100
+        self.PRA = 0b01001000
+        self.IRET = 0b00010011
+        self.ADDI = 0b10111011
 
     def load(self,filename):
         """Load a program into self.ram."""
@@ -158,8 +162,25 @@ class CPU:
                     #necessary to break out of normal dynamic calculation of next pointer position
                     self.DIDJUMP = True
 
+            elif ir == self.ST:
+                print("ST")
+                register_a = self.reg_read(instruction_a)
+                register_b = self.reg_read(instruction_b)
+                self.reg_write(register_a,instruction_b)
+
+            elif ir == self.PRA:
+                print("PRA")
+                register_a = self.reg_read(instruction_a)
+                print(chr(register_a))
 
                   
+            elif ir == self.ADDI:
+               
+                print("ADDI")
+                register_a = self.reg_read(instruction_a)
+                
+                self.reg_write((register_a + instruction_b),instruction_a)
+
 
             elif ir == self.PRN:
                 print("PRINT")
@@ -184,8 +205,8 @@ class CPU:
                 self.DIDJUMP = True
 
             elif ir == self.JMP:
-                # self.sp -=1
-                # self.ram[self.sp] = self.pc + 2
+                self.sp -=1
+                self.ram[self.sp] = self.pc + 2
                 jump_pointer = self.reg_read(instruction_a)
                 self.pc = jump_pointer
                 #necessary to break out of normal dynamic calculation of next pointer position
@@ -210,6 +231,9 @@ class CPU:
                
                 self.pc = new_program_counter
                 self.DIDJUMP = True
+
+            elif ir == self.IRET:
+                pass
 
 
                
