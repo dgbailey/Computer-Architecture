@@ -24,6 +24,11 @@ class CPU:
         self.MULT2PRINT = 0b00011000
         self.DIDJUMP = False
         self.ADD = 0b10100000
+        self.fl = [0]*8
+        self.CMP = 0b10100111
+        self.JMP = 0b01010100
+        self.JNE = 0b01010110
+        self.JEQ = 0b01010101
 
     def load(self,filename):
         """Load a program into self.ram."""
@@ -116,6 +121,46 @@ class CPU:
                 self.reg_write(data,reg_address)
 
 
+            elif ir ==self.CMP:
+                #00000LGE
+                register_a = self.reg_read(instruction_a)
+                register_b = self.reg_read(instruction_b)
+
+                if register_a < register_b:
+                    #L
+                    self.reg[-3] = 1
+                   
+                elif register_a > register_b:
+                    #G
+                    self.reg[-2] = 1
+                  
+                elif register_a == register_b:
+                    #E
+                    self.reg[-1] = 1
+
+            elif ir == self.JNE:
+                #do I need to push to the stack on jumps?
+                if self.reg[-1] == 0:
+                    # self.sp -=1
+                    # self.ram[self.sp] = self.pc + 2
+                    jump_pointer = self.reg_read(instruction_a)
+                    self.pc = jump_pointer
+                    #necessary to break out of normal dynamic calculation of next pointer position
+                    self.DIDJUMP = True
+
+            elif ir == self.JEQ:
+            #do I need to push to the stack on jumps?
+                if self.reg[-1] == 1:
+                    # self.sp -=1
+                    # self.ram[self.sp] = self.pc + 2
+                    jump_pointer = self.reg_read(instruction_a)
+                    self.pc = jump_pointer
+                    #necessary to break out of normal dynamic calculation of next pointer position
+                    self.DIDJUMP = True
+
+
+                  
+
             elif ir == self.PRN:
                 print("PRINT")
                 data = self.reg_read(instruction_a)
@@ -135,6 +180,14 @@ class CPU:
                 #read reg 0 to get sub routing PC, set PC to new subroutine position
                 sub_routine_pointer = self.reg_read(instruction_a)
                 self.pc = sub_routine_pointer
+                #necessary to break out of normal dynamic calculation of next pointer position
+                self.DIDJUMP = True
+
+            elif ir == self.JMP:
+                # self.sp -=1
+                # self.ram[self.sp] = self.pc + 2
+                jump_pointer = self.reg_read(instruction_a)
+                self.pc = jump_pointer
                 #necessary to break out of normal dynamic calculation of next pointer position
                 self.DIDJUMP = True
 
